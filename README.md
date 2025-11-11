@@ -35,35 +35,34 @@ This project quantifies those tradeoffs in a reproducible, visual, and data-driv
 ## Pipeline Overview
 
 ```
-
-```
-        ┌───────────────────────────┐
-        │      Real Dataset         │
-        └────────────┬──────────────┘
-                     │
-                     ▼
-       ┌──────────────────────────────┐
-       │ Preprocessing & Schema       │
-       │ Numeric / Categorical Split  │
-       └────────────┬─────────────────┘
-                    │
-    ┌───────────────┴────────────────────┐
-    │                                    │
-    ▼                                    ▼
-```
-
+         ┌───────────────────────────┐
+         │        Real Dataset       │
+         └──────────────┬────────────┘
+                        │
+                        ▼
+        ┌──────────────────────────────┐
+        │   Preprocessing & Schema     │
+        │  Numeric / Categorical Split │
+        └───────────────┬──────────────┘
+                        │
+        ┌───────────────┴────────────────────┐
+        │                                    │
+        ▼                                    ▼
 ┌────────────────┐                ┌────────────────────┐
-│  Gaussian      │                │ Variational        │
+│    Gaussian    │                │    Variational     │
 │  Copula Model  │                │ Autoencoder (VAE)  │
 └────────────────┘                └────────────────────┘
-│                                    │
-▼                                    ▼
-Synthetic Dataset                    Synthetic Dataset
-│                                    │
-└────────────────┬───────────────────┘
-▼
-Evaluation & Visualization Suite
-
+        │                                    │
+        ▼                                    ▼
+┌────────────────────┐             ┌────────────────────┐
+│ Synthetic Dataset  │             │ Synthetic Dataset  │
+└────────────────────┘             └────────────────────┘
+        │                                    │
+        └────────────────┬───────────────────┘
+                         ▼
+         ┌─────────────────────────────────┐
+         │ Evaluation & Visualization Suite│
+         └─────────────────────────────────┘
 ```
 
 ---
