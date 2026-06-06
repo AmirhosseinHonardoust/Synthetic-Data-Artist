@@ -1,6 +1,20 @@
-rows: null
+rows: 1000
 categorical_threshold: 20
 seed: 42
 pca_components: 2
 hist_bins: 30
 pairplot_sample: 500
+
+vae:
+  epochs: 30
+  batch_size: 128
+  latent_dim: 8
+  hidden_dim: 64
+  learning_rate: 0.001
+  kl_weight: 0.001
+
+evaluation:
+  privacy_max_rows: 500
+  ml_utility:
+    target: null
+    test_size: 0.25
