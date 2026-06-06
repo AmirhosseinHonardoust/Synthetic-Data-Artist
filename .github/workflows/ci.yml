@@ -32,19 +32,73 @@ jobs:
 
       - name: Check source files compile
         run: |
-          python -m compileall src
+          python -m compileall src tests
 
       - name: Run unit tests
         run: |
           python -m unittest discover -s tests -v
 
+      - name: Create small CI dataset and config
+        run: |
+          mkdir -p data
+
+          python - <<'PY'
+          import numpy as np
+          import pandas as pd
+
+          rng = np.random.default_rng(42)
+          n = 80
+
+          df = pd.DataFrame({
+              "age": rng.normal(40, 10, n).round(2),
+              "income": rng.normal(75000, 12000, n).round(2),
+              "score": rng.normal(0, 1, n).round(4),
+              "segment": rng.choice(["A", "B", "C"], size=n, p=[0.45, 0.35, 0.20]),
+              "channel": rng.choice(["web", "store", "mobile"], size=n),
+              "visits": rng.integers(1, 6, size=n),
+          })
+
+          df.to_csv("data/ci_real_data.csv", index=False)
+          PY
+
+          cat > ci_config.yaml <<'YAML'
+          rows: 40
+          categorical_threshold: 10
+          seed: 42
+          pca_components: 2
+          hist_bins: 10
+          pairplot_sample: 30
+
+          vae:
+            epochs: 1
+            batch_size: 16
+            latent_dim: 2
+            hidden_dim: 16
+            learning_rate: 0.001
+            kl_weight: 0.001
+          YAML
+
       - name: Run Copula smoke workflow
         run: |
-          python src/main.py --method copula --run_name ci_copula
+          python src/main.py \
+            --config ci_config.yaml \
+            --data data/ci_real_data.csv \
+            --method copula \
+            --run_name ci_copula
+
+      - name: Run VAE smoke workflow
+        run: |
+          python src/main.py \
+            --config ci_config.yaml \
+            --data data/ci_real_data.csv \
+            --method vae \
+            --run_name ci_vae
 
       - name: Verify expected outputs
         run: |
           test -f data/synthetic_data_ci_copula.csv
+          test -f data/synthetic_data_ci_vae.csv
+
           test -f outputs/ci_copula/metrics.json
           test -f outputs/ci_copula/plots/distribution_overlap.png
           test -f outputs/ci_copula/plots/pca_projection.png
@@ -52,11 +106,21 @@ jobs:
           test -f outputs/ci_copula/plots/pairplot_comparison.png
           test -f reports/ci_copula_report.html
 
+          test -f outputs/ci_vae/metrics.json
+          test -f outputs/ci_vae/plots/distribution_overlap.png
+          test -f outputs/ci_vae/plots/pca_projection.png
+          test -f outputs/ci_vae/plots/correlation_heatmap.png
+          test -f outputs/ci_vae/plots/pairplot_comparison.png
+          test -f reports/ci_vae_report.html
+
       - name: Upload generated outputs
         uses: actions/upload-artifact@v4
         with:
           name: synthetic-data-artist-outputs-python-${{ matrix.python-version }}
           path: |
             data/synthetic_data_ci_copula.csv
+            data/synthetic_data_ci_vae.csv
             outputs/ci_copula/
+            outputs/ci_vae/
             reports/ci_copula_report.html
+            reports/ci_vae_report.html
