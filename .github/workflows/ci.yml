@@ -62,13 +62,21 @@ jobs:
           df.to_csv("data/ci_real_data.csv", index=False)
           PY
 
-          cat > ci_config.yaml <<'YAML'
+          cat > ci_config.yaml <<'YAML_CONFIG'
           rows: 40
           categorical_threshold: 10
           seed: 42
           pca_components: 2
           hist_bins: 10
           pairplot_sample: 30
+
+          paths:
+            data_dir: ci_data
+            output_dir: ci_outputs
+            report_dir: ci_reports
+
+          plots:
+            pairplot: false
 
           vae:
             epochs: 1
@@ -83,7 +91,15 @@ jobs:
             ml_utility:
               target: purchased
               test_size: 0.25
-          YAML
+          YAML_CONFIG
+
+      - name: Validate config and input data only
+        run: |
+          python src/main.py \
+            --config ci_config.yaml \
+            --data data/ci_real_data.csv \
+            --method copula \
+            --validate-only
 
       - name: Run Copula smoke workflow
         run: |
@@ -91,7 +107,8 @@ jobs:
             --config ci_config.yaml \
             --data data/ci_real_data.csv \
             --method copula \
-            --run_name ci_copula
+            --run_name ci_copula \
+            --skip-pairplot
 
       - name: Run VAE smoke workflow
         run: |
@@ -99,29 +116,30 @@ jobs:
             --config ci_config.yaml \
             --data data/ci_real_data.csv \
             --method vae \
-            --run_name ci_vae
+            --run_name ci_vae \
+            --skip-pairplot
 
       - name: Verify expected Copula outputs
         run: |
-          test -f data/synthetic_data_ci_copula.csv
-          test -f outputs/ci_copula/metrics.json
-          test -f outputs/ci_copula/quality_summary.csv
-          test -f outputs/ci_copula/plots/distribution_overlap.png
-          test -f outputs/ci_copula/plots/pca_projection.png
-          test -f outputs/ci_copula/plots/correlation_heatmap.png
-          test -f outputs/ci_copula/plots/pairplot_comparison.png
-          test -f reports/ci_copula_report.html
+          test -f ci_data/synthetic_data_ci_copula.csv
+          test -f ci_outputs/ci_copula/metrics.json
+          test -f ci_outputs/ci_copula/quality_summary.csv
+          test -f ci_outputs/ci_copula/plots/distribution_overlap.png
+          test -f ci_outputs/ci_copula/plots/pca_projection.png
+          test -f ci_outputs/ci_copula/plots/correlation_heatmap.png
+          test ! -f ci_outputs/ci_copula/plots/pairplot_comparison.png
+          test -f ci_reports/ci_copula_report.html
 
       - name: Verify expected VAE outputs
         run: |
-          test -f data/synthetic_data_ci_vae.csv
-          test -f outputs/ci_vae/metrics.json
-          test -f outputs/ci_vae/quality_summary.csv
-          test -f outputs/ci_vae/plots/distribution_overlap.png
-          test -f outputs/ci_vae/plots/pca_projection.png
-          test -f outputs/ci_vae/plots/correlation_heatmap.png
-          test -f outputs/ci_vae/plots/pairplot_comparison.png
-          test -f reports/ci_vae_report.html
+          test -f ci_data/synthetic_data_ci_vae.csv
+          test -f ci_outputs/ci_vae/metrics.json
+          test -f ci_outputs/ci_vae/quality_summary.csv
+          test -f ci_outputs/ci_vae/plots/distribution_overlap.png
+          test -f ci_outputs/ci_vae/plots/pca_projection.png
+          test -f ci_outputs/ci_vae/plots/correlation_heatmap.png
+          test ! -f ci_outputs/ci_vae/plots/pairplot_comparison.png
+          test -f ci_reports/ci_vae_report.html
 
       - name: Validate metrics JSON files
         run: |
@@ -130,8 +148,8 @@ jobs:
           from pathlib import Path
 
           for path in [
-              Path("outputs/ci_copula/metrics.json"),
-              Path("outputs/ci_vae/metrics.json"),
+              Path("ci_outputs/ci_copula/metrics.json"),
+              Path("ci_outputs/ci_vae/metrics.json"),
           ]:
               data = json.loads(path.read_text())
               required_keys = [
@@ -143,11 +161,15 @@ jobs:
                   "exact_duplicate_rate",
                   "nearest_neighbor_distance_mean",
                   "ml_utility_available",
+                  "pairplot_enabled",
               ]
 
               missing = [key for key in required_keys if key not in data]
               if missing:
                   raise AssertionError(f"{path} is missing keys: {missing}")
+
+              if data["pairplot_enabled"] is not False:
+                  raise AssertionError(f"{path} should report pairplot_enabled=false")
 
               print(f"{path} OK")
           PY
@@ -157,9 +179,9 @@ jobs:
         with:
           name: synthetic-data-artist-outputs-python-${{ matrix.python-version }}
           path: |
-            data/synthetic_data_ci_copula.csv
-            data/synthetic_data_ci_vae.csv
-            outputs/ci_copula/
-            outputs/ci_vae/
-            reports/ci_copula_report.html
-            reports/ci_vae_report.html
+            ci_data/synthetic_data_ci_copula.csv
+            ci_data/synthetic_data_ci_vae.csv
+            ci_outputs/ci_copula/
+            ci_outputs/ci_vae/
+            ci_reports/ci_copula_report.html
+            ci_reports/ci_vae_report.html
