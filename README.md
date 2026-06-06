@@ -165,6 +165,43 @@ Main charts include:
 
 These charts are diagnostic tools. They help identify obvious quality problems, but they should not be treated as proof that synthetic data is private or production-ready.
 
+### Distribution Overlap Comparison
+
+| Copula | VAE |
+|---|---|
+| ![Copula distribution overlap](outputs/copula_run/plots/distribution_overlap.png) | ![VAE distribution overlap](outputs/vae_run/plots/distribution_overlap.png) |
+| **Analysis:** The Copula generator preserves the real numeric distributions much better on this demo dataset. It keeps the feature shapes closer to the original data and achieves a mean distribution-overlap score of approximately **0.941**. | **Analysis:** The lightweight VAE baseline produces more compressed distributions and loses more tail behavior. Its mean distribution-overlap score is approximately **0.596**, which indicates weaker distribution preservation. |
+
+### PCA Projection Comparison
+
+| Copula | VAE |
+|---|---|
+| ![Copula PCA projection](outputs/copula_run/plots/pca_projection.png) | ![VAE PCA projection](outputs/vae_run/plots/pca_projection.png) |
+| **Analysis:** Copula samples cover a similar region of the real-data space, suggesting better diversity and coverage of the original feature space. | **Analysis:** VAE samples are more concentrated around the center, suggesting weaker coverage and less diversity in this lightweight baseline configuration. |
+
+### Metric Summary
+
+<div align="center">
+
+| Method | Distribution overlap ↑ | Correlation diff ↓ | Categorical similarity ↑ | Exact duplicate rate ↓ |
+|---|---|---|---|---|
+| Copula | 0.941 | 0.015 | 0.972 | 0.000 |
+| VAE | 0.596 | 0.151 | 0.591 | 0.000 |
+</div>
+
+**Interpretation:** Higher distribution overlap and categorical similarity are better. Lower correlation difference and duplicate rate are better. On this demo dataset, Copula is the stronger generator, while the VAE is useful as a neural baseline but currently underfits the real data distribution.
+
+<details>
+<summary>Additional Pairplot Diagnostics</summary>
+
+| Copula | VAE |
+|---|---|
+| ![Copula pairplot](outputs/copula_run/plots/pairplot_comparison.png) | ![VAE pairplot](outputs/vae_run/plots/pairplot_comparison.png) |
+| **Analysis:** Copula better preserves the overall spread and pairwise relationships between numeric variables. | **Analysis:** VAE samples are visibly more concentrated and do not preserve the full spread of the real data as well. |
+
+</details>
+
+
 ---
 
 ## How the Evaluation Works
