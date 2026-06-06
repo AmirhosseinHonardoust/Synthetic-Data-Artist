@@ -1,0 +1,2 @@
+method,rows_real,rows_synthetic,distribution_overlap_mean,correlation_diff_mean,categorical_similarity_mean,numeric_summary_diff_mean,boundary_violation_rate_mean,exact_duplicate_rate,nearest_neighbor_distance_p05,ml_utility_available
+copula,500,1000,0.9407796034871582,0.015196542824902856,0.9715,0.04490553036681102,0.0,0.0,0.35610617467200717,False

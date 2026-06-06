@@ -1,0 +1,2 @@
+method,rows_real,rows_synthetic,distribution_overlap_mean,correlation_diff_mean,categorical_similarity_mean,numeric_summary_diff_mean,boundary_violation_rate_mean,exact_duplicate_rate,nearest_neighbor_distance_p05,ml_utility_available
+vae,500,1000,0.5956136050241242,0.15149483431150804,0.5905,1.2047618819547847,0.0,0.0,0.16245466170724251,False
