@@ -9,7 +9,13 @@ import numpy as np
 try:  # package imports, e.g. `python -m src.main`
     from .config import get_nested, load_config, save_json, set_seed
     from .data import load_or_generate
-    from .evaluation.metrics import js_distance as _jsd
+    from .evaluation.metrics import (
+        boundary_violation_rates,
+        categorical_distribution_similarity,
+        ml_utility_metrics,
+        numeric_summary_differences,
+        privacy_nearest_neighbor_metrics,
+    )
     from .evaluation.plots import (
         pairplot_compare,
         plot_correlation_heatmap,
@@ -29,7 +35,13 @@ try:  # package imports, e.g. `python -m src.main`
 except ImportError:  # script imports, e.g. `python src/main.py`
     from config import get_nested, load_config, save_json, set_seed
     from data import load_or_generate
-    from evaluation.metrics import js_distance as _jsd
+    from evaluation.metrics import (
+        boundary_violation_rates,
+        categorical_distribution_similarity,
+        ml_utility_metrics,
+        numeric_summary_differences,
+        privacy_nearest_neighbor_metrics,
+    )
     from evaluation.plots import (
         pairplot_compare,
         plot_correlation_heatmap,
@@ -104,22 +116,102 @@ def main() -> None:
     syn_path = data_dir / f"synthetic_data_{run_name}.csv"
     df_syn.to_csv(syn_path, index=False)
 
-    dist_scores = plot_distribution_overlap(df, df_syn, bins=bins, out_path=plots_dir / "distribution_overlap.png")
-    pca_info = plot_pca(df, df_syn, out_path=plots_dir / "pca_projection.png", n_components=pca_components)
-    corr_info = plot_correlation_heatmap(df, df_syn, out_path=plots_dir / "correlation_heatmap.png")
-    pairplot_compare(df, df_syn, out_path=plots_dir / "pairplot_comparison.png", sample=pairplot_sample)
+    dist_scores = plot_distribution_overlap(
+        df,
+        df_syn,
+        bins=bins,
+        out_path=plots_dir / "distribution_overlap.png",
+        numeric_cols=numeric_cols,
+    )
+    pca_info = plot_pca(
+        df,
+        df_syn,
+        out_path=plots_dir / "pca_projection.png",
+        n_components=pca_components,
+        numeric_cols=numeric_cols,
+    )
+    corr_info = plot_correlation_heatmap(
+        df,
+        df_syn,
+        out_path=plots_dir / "correlation_heatmap.png",
+        numeric_cols=numeric_cols,
+    )
+    pairplot_compare(
+        df,
+        df_syn,
+        out_path=plots_dir / "pairplot_comparison.png",
+        sample=pairplot_sample,
+        numeric_cols=numeric_cols,
+    )
+
+    categorical_info = categorical_distribution_similarity(df, df_syn, categorical_cols)
+    numeric_summary_info = numeric_summary_differences(df, df_syn, numeric_cols)
+    boundary_info = boundary_violation_rates(df, df_syn, numeric_cols, categorical_cols)
+    privacy_info = privacy_nearest_neighbor_metrics(
+        df,
+        df_syn,
+        numeric_cols,
+        categorical_cols,
+        max_rows=int(get_nested(cfg, "evaluation.privacy_max_rows", 500)),
+        seed=seed,
+    )
+
+    ml_target = get_nested(cfg, "evaluation.ml_utility.target", None)
+    if ml_target:
+        ml_utility_info = ml_utility_metrics(
+            df,
+            df_syn,
+            target_col=str(ml_target),
+            numeric_cols=numeric_cols,
+            categorical_cols=categorical_cols,
+            seed=seed,
+            test_size=float(get_nested(cfg, "evaluation.ml_utility.test_size", 0.25)),
+        )
+    else:
+        ml_utility_info = {
+            "ml_utility_available": False,
+            "ml_utility_reason": "No target configured at evaluation.ml_utility.target.",
+        }
 
     metrics = {
         "rows_real": int(len(df)),
         "rows_synthetic": int(len(df_syn)),
         "method": args.method,
         "seed": seed,
-        "distribution_overlap_mean": float(np.mean(list(dist_scores.values()))) if dist_scores else None,
+        "schema": {
+            "numeric_columns": numeric_cols,
+            "categorical_columns": categorical_cols,
+        },
+        "distribution_overlap_mean": float(np.mean([v for v in dist_scores.values() if v is not None])) if dist_scores else None,
         "distribution_overlap_per_feature": dist_scores,
         "pca_explained_variance": (pca_info or {}).get("explained_variance"),
         **corr_info,
+        **categorical_info,
+        **numeric_summary_info,
+        **boundary_info,
+        **privacy_info,
+        **ml_utility_info,
     }
     save_json(run_dir / "metrics.json", metrics)
+
+    summary_keys = [
+        "method",
+        "rows_real",
+        "rows_synthetic",
+        "distribution_overlap_mean",
+        "correlation_diff_mean",
+        "categorical_similarity_mean",
+        "numeric_summary_diff_mean",
+        "boundary_violation_rate_mean",
+        "exact_duplicate_rate",
+        "nearest_neighbor_distance_p05",
+        "ml_utility_available",
+        "utility_ratio",
+    ]
+    summary = {key: metrics.get(key) for key in summary_keys if key in metrics}
+    import pandas as pd
+
+    pd.DataFrame([summary]).to_csv(run_dir / "quality_summary.csv", index=False)
 
     write_report(
         method=args.method,

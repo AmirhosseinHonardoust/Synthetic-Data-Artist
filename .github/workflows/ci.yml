@@ -56,6 +56,7 @@ jobs:
               "segment": rng.choice(["A", "B", "C"], size=n, p=[0.45, 0.35, 0.20]),
               "channel": rng.choice(["web", "store", "mobile"], size=n),
               "visits": rng.integers(1, 6, size=n),
+              "purchased": rng.choice([0, 1], size=n, p=[0.6, 0.4]),
           })
 
           df.to_csv("data/ci_real_data.csv", index=False)
@@ -76,6 +77,12 @@ jobs:
             hidden_dim: 16
             learning_rate: 0.001
             kl_weight: 0.001
+
+          evaluation:
+            privacy_max_rows: 100
+            ml_utility:
+              target: purchased
+              test_size: 0.25
           YAML
 
       - name: Run Copula smoke workflow
@@ -94,24 +101,56 @@ jobs:
             --method vae \
             --run_name ci_vae
 
-      - name: Verify expected outputs
+      - name: Verify expected Copula outputs
         run: |
           test -f data/synthetic_data_ci_copula.csv
-          test -f data/synthetic_data_ci_vae.csv
-
           test -f outputs/ci_copula/metrics.json
+          test -f outputs/ci_copula/quality_summary.csv
           test -f outputs/ci_copula/plots/distribution_overlap.png
           test -f outputs/ci_copula/plots/pca_projection.png
           test -f outputs/ci_copula/plots/correlation_heatmap.png
           test -f outputs/ci_copula/plots/pairplot_comparison.png
           test -f reports/ci_copula_report.html
 
+      - name: Verify expected VAE outputs
+        run: |
+          test -f data/synthetic_data_ci_vae.csv
           test -f outputs/ci_vae/metrics.json
+          test -f outputs/ci_vae/quality_summary.csv
           test -f outputs/ci_vae/plots/distribution_overlap.png
           test -f outputs/ci_vae/plots/pca_projection.png
           test -f outputs/ci_vae/plots/correlation_heatmap.png
           test -f outputs/ci_vae/plots/pairplot_comparison.png
           test -f reports/ci_vae_report.html
+
+      - name: Validate metrics JSON files
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          for path in [
+              Path("outputs/ci_copula/metrics.json"),
+              Path("outputs/ci_vae/metrics.json"),
+          ]:
+              data = json.loads(path.read_text())
+              required_keys = [
+                  "distribution_overlap_mean",
+                  "correlation_diff_mean",
+                  "categorical_similarity_mean",
+                  "numeric_summary_diff_mean",
+                  "boundary_violation_rate_mean",
+                  "exact_duplicate_rate",
+                  "nearest_neighbor_distance_mean",
+                  "ml_utility_available",
+              ]
+
+              missing = [key for key in required_keys if key not in data]
+              if missing:
+                  raise AssertionError(f"{path} is missing keys: {missing}")
+
+              print(f"{path} OK")
+          PY
 
       - name: Upload generated outputs
         uses: actions/upload-artifact@v4
