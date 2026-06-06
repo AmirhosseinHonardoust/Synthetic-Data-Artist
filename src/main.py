@@ -3,12 +3,14 @@ from __future__ import annotations
 import argparse
 import os
 from pathlib import Path
+from typing import Sequence
 
 import numpy as np
+import pandas as pd
 
 try:  # package imports, e.g. `python -m src.main`
-    from .config import get_nested, load_config, save_json, set_seed
-    from .data import load_or_generate
+    from .config import get_nested, load_config, save_json, set_seed, validate_config
+    from .data import load_or_generate, validate_dataframe
     from .evaluation.metrics import (
         boundary_violation_rates,
         categorical_distribution_similarity,
@@ -22,19 +24,13 @@ try:  # package imports, e.g. `python -m src.main`
         plot_distribution_overlap,
         plot_pca,
     )
-    from .models.copula import (
-        _empirical_cdf,
-        _empirical_ppf,
-        fit_copula,
-        generate_copula,
-        sample_copula,
-    )
+    from .models.copula import generate_copula
     from .models.vae import train_and_generate_vae
     from .reporting.html_report import write_report
     from .schema import detect_schema
 except ImportError:  # script imports, e.g. `python src/main.py`
-    from config import get_nested, load_config, save_json, set_seed
-    from data import load_or_generate
+    from config import get_nested, load_config, save_json, set_seed, validate_config
+    from data import load_or_generate, validate_dataframe
     from evaluation.metrics import (
         boundary_violation_rates,
         categorical_distribution_similarity,
@@ -48,56 +44,100 @@ except ImportError:  # script imports, e.g. `python src/main.py`
         plot_distribution_overlap,
         plot_pca,
     )
-    from models.copula import (
-        _empirical_cdf,
-        _empirical_ppf,
-        fit_copula,
-        generate_copula,
-        sample_copula,
-    )
+    from models.copula import generate_copula
     from models.vae import train_and_generate_vae
     from reporting.html_report import write_report
     from schema import detect_schema
 
 
-def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--config", default="config.yaml")
+def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description="Generate and evaluate synthetic tabular data with Copula or VAE methods."
+    )
+    parser.add_argument("--config", default="config.yaml", help="Path to YAML config file.")
     parser.add_argument("--method", choices=["copula", "vae"], default="copula")
-    parser.add_argument("--data", default="data/real_data.csv")
-    parser.add_argument("--run_name", default=None, help="Optional name to separate outputs")
-    return parser.parse_args()
+    parser.add_argument("--data", default="data/real_data.csv", help="Path to real input CSV.")
+    parser.add_argument("--run_name", default=None, help="Optional name to separate outputs.")
+    parser.add_argument("--rows", type=int, default=None, help="Override number of synthetic rows.")
+    parser.add_argument("--outdir", default=None, help="Root directory for run outputs.")
+    parser.add_argument("--data-outdir", default=None, help="Directory for synthetic CSV outputs.")
+    parser.add_argument("--report-dir", default=None, help="Directory for HTML reports.")
+    parser.add_argument(
+        "--skip-pairplot",
+        action="store_true",
+        help="Skip the pairplot. Useful for fast local checks and CI.",
+    )
+    parser.add_argument(
+        "--validate-only",
+        action="store_true",
+        help="Validate config/data/schema and exit without generating synthetic data.",
+    )
+    return parser.parse_args(argv)
 
 
-def main() -> None:
-    args = parse_args()
+def _resolve_path(cli_value: str | None, config: dict, key: str, default: str) -> Path:
+    value = cli_value if cli_value is not None else get_nested(config, key, default)
+    return Path(str(value))
+
+
+def main(argv: Sequence[str] | None = None) -> None:
+    args = parse_args(argv)
 
     cfg = load_config(args.config) if os.path.exists(args.config) else {}
+    validate_config(cfg)
+
     seed = int(cfg.get("seed", 42))
     set_seed(seed)
 
-    rows_cfg = cfg.get("rows", None)
+    rows_cfg = args.rows if args.rows is not None else cfg.get("rows", None)
     bins = int(cfg.get("hist_bins", 30))
     pca_components = int(cfg.get("pca_components", 2))
     pairplot_sample = int(cfg.get("pairplot_sample", 500))
     cat_thr = int(cfg.get("categorical_threshold", 20))
 
+    if rows_cfg is not None and int(rows_cfg) <= 0:
+        raise ValueError("--rows must be a positive integer when provided.")
+
     run_name = args.run_name or args.method
-    data_dir = Path("data")
-    run_dir = Path("outputs") / run_name
+    data_dir = _resolve_path(args.data_outdir, cfg, "paths.data_dir", "data")
+    output_root = _resolve_path(args.outdir, cfg, "paths.output_dir", "outputs")
+    reports_dir = _resolve_path(args.report_dir, cfg, "paths.report_dir", "reports")
+
+    run_dir = output_root / run_name
     plots_dir = run_dir / "plots"
-    reports_dir = Path("reports")
 
     plots_dir.mkdir(parents=True, exist_ok=True)
     reports_dir.mkdir(parents=True, exist_ok=True)
     data_dir.mkdir(parents=True, exist_ok=True)
 
-    df = load_or_generate(args.data, seed=seed)
+    df = load_or_generate(
+        args.data,
+        seed=seed,
+        generated_output_path=data_dir / "real_data.csv",
+    )
+    validate_dataframe(df)
+
     numeric_cols, categorical_cols = detect_schema(df, categorical_threshold=cat_thr)
+    if not numeric_cols and not categorical_cols:
+        raise ValueError("No usable columns were detected in the input data.")
+
     n_rows = int(rows_cfg) if rows_cfg is not None else len(df)
 
+    if args.validate_only:
+        print("Validation successful.")
+        print(f"Rows: {len(df)}")
+        print(f"Numeric columns: {numeric_cols}")
+        print(f"Categorical columns: {categorical_cols}")
+        return
+
     if args.method == "copula":
-        df_syn = generate_copula(df, numeric_cols, categorical_cols, n_rows=n_rows, seed=seed)
+        df_syn = generate_copula(
+            df,
+            numeric_cols,
+            categorical_cols,
+            n_rows=n_rows,
+            seed=seed,
+        )
     else:
         df_syn = train_and_generate_vae(
             df,
@@ -112,6 +152,8 @@ def main() -> None:
             learning_rate=float(get_nested(cfg, "vae.learning_rate", 1e-3)),
             kl_weight=float(get_nested(cfg, "vae.kl_weight", 1e-3)),
         )
+
+    validate_dataframe(df_syn)
 
     syn_path = data_dir / f"synthetic_data_{run_name}.csv"
     df_syn.to_csv(syn_path, index=False)
@@ -136,13 +178,16 @@ def main() -> None:
         out_path=plots_dir / "correlation_heatmap.png",
         numeric_cols=numeric_cols,
     )
-    pairplot_compare(
-        df,
-        df_syn,
-        out_path=plots_dir / "pairplot_comparison.png",
-        sample=pairplot_sample,
-        numeric_cols=numeric_cols,
-    )
+
+    pairplot_enabled = bool(get_nested(cfg, "plots.pairplot", True)) and not args.skip_pairplot
+    if pairplot_enabled:
+        pairplot_compare(
+            df,
+            df_syn,
+            out_path=plots_dir / "pairplot_comparison.png",
+            sample=pairplot_sample,
+            numeric_cols=numeric_cols,
+        )
 
     categorical_info = categorical_distribution_similarity(df, df_syn, categorical_cols)
     numeric_summary_info = numeric_summary_differences(df, df_syn, numeric_cols)
@@ -182,7 +227,18 @@ def main() -> None:
             "numeric_columns": numeric_cols,
             "categorical_columns": categorical_cols,
         },
-        "distribution_overlap_mean": float(np.mean([v for v in dist_scores.values() if v is not None])) if dist_scores else None,
+        "paths": {
+            "synthetic_data": str(syn_path),
+            "run_dir": str(run_dir),
+            "plots_dir": str(plots_dir),
+            "report": str(reports_dir / f"{run_name}_report.html"),
+        },
+        "pairplot_enabled": pairplot_enabled,
+        "distribution_overlap_mean": (
+            float(np.mean([v for v in dist_scores.values() if v is not None]))
+            if dist_scores
+            else None
+        ),
         "distribution_overlap_per_feature": dist_scores,
         "pca_explained_variance": (pca_info or {}).get("explained_variance"),
         **corr_info,
@@ -209,23 +265,22 @@ def main() -> None:
         "utility_ratio",
     ]
     summary = {key: metrics.get(key) for key in summary_keys if key in metrics}
-    import pandas as pd
-
     pd.DataFrame([summary]).to_csv(run_dir / "quality_summary.csv", index=False)
 
+    report_path = reports_dir / f"{run_name}_report.html"
     write_report(
         method=args.method,
         rows=n_rows,
         seed=seed,
         metrics=metrics,
-        report_path=reports_dir / f"{run_name}_report.html",
+        report_path=report_path,
         run_name=run_name,
     )
 
     print(f"Saved synthetic CSV: {syn_path}")
     print(f"Saved metrics:       {run_dir / 'metrics.json'}")
     print(f"Saved plots in:      {plots_dir}")
-    print(f"Saved report:        {reports_dir / f'{run_name}_report.html'}")
+    print(f"Saved report:        {report_path}")
 
 
 if __name__ == "__main__":
