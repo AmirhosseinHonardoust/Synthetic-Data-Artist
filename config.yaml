@@ -5,6 +5,14 @@ pca_components: 2
 hist_bins: 30
 pairplot_sample: 500
 
+paths:
+  data_dir: data
+  output_dir: outputs
+  report_dir: reports
+
+plots:
+  pairplot: true
+
 vae:
   epochs: 30
   batch_size: 128
