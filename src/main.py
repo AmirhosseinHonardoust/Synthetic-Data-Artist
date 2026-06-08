@@ -99,6 +99,7 @@ def main(argv: Sequence[str] | None = None) -> None:
         raise ValueError("--rows must be a positive integer when provided.")
 
     run_name = args.run_name or args.method
+
     data_dir = _resolve_path(args.data_outdir, cfg, "paths.data_dir", "data")
     output_root = _resolve_path(args.outdir, cfg, "paths.output_dir", "outputs")
     reports_dir = _resolve_path(args.report_dir, cfg, "paths.report_dir", "reports")
@@ -106,10 +107,10 @@ def main(argv: Sequence[str] | None = None) -> None:
     run_dir = output_root / run_name
     plots_dir = run_dir / "plots"
 
-    plots_dir.mkdir(parents=True, exist_ok=True)
-    reports_dir.mkdir(parents=True, exist_ok=True)
-    data_dir.mkdir(parents=True, exist_ok=True)
-
+    # Important:
+    # Do not create output/report folders before --validate-only exits.
+    # Validation mode should check config/data/schema only and should not leave
+    # empty folders like outputs/copula/plots behind.
     df = load_or_generate(
         args.data,
         seed=seed,
@@ -118,6 +119,7 @@ def main(argv: Sequence[str] | None = None) -> None:
     validate_dataframe(df)
 
     numeric_cols, categorical_cols = detect_schema(df, categorical_threshold=cat_thr)
+
     if not numeric_cols and not categorical_cols:
         raise ValueError("No usable columns were detected in the input data.")
 
@@ -129,6 +131,11 @@ def main(argv: Sequence[str] | None = None) -> None:
         print(f"Numeric columns: {numeric_cols}")
         print(f"Categorical columns: {categorical_cols}")
         return
+
+    # Create output folders only when a generation/evaluation run is actually happening.
+    plots_dir.mkdir(parents=True, exist_ok=True)
+    reports_dir.mkdir(parents=True, exist_ok=True)
+    data_dir.mkdir(parents=True, exist_ok=True)
 
     if args.method == "copula":
         df_syn = generate_copula(
@@ -165,6 +172,7 @@ def main(argv: Sequence[str] | None = None) -> None:
         out_path=plots_dir / "distribution_overlap.png",
         numeric_cols=numeric_cols,
     )
+
     pca_info = plot_pca(
         df,
         df_syn,
@@ -172,6 +180,7 @@ def main(argv: Sequence[str] | None = None) -> None:
         n_components=pca_components,
         numeric_cols=numeric_cols,
     )
+
     corr_info = plot_correlation_heatmap(
         df,
         df_syn,
@@ -179,7 +188,11 @@ def main(argv: Sequence[str] | None = None) -> None:
         numeric_cols=numeric_cols,
     )
 
-    pairplot_enabled = bool(get_nested(cfg, "plots.pairplot", True)) and not args.skip_pairplot
+    pairplot_enabled = (
+        bool(get_nested(cfg, "plots.pairplot", True))
+        and not args.skip_pairplot
+    )
+
     if pairplot_enabled:
         pairplot_compare(
             df,
@@ -192,6 +205,7 @@ def main(argv: Sequence[str] | None = None) -> None:
     categorical_info = categorical_distribution_similarity(df, df_syn, categorical_cols)
     numeric_summary_info = numeric_summary_differences(df, df_syn, numeric_cols)
     boundary_info = boundary_violation_rates(df, df_syn, numeric_cols, categorical_cols)
+
     privacy_info = privacy_nearest_neighbor_metrics(
         df,
         df_syn,
@@ -202,6 +216,7 @@ def main(argv: Sequence[str] | None = None) -> None:
     )
 
     ml_target = get_nested(cfg, "evaluation.ml_utility.target", None)
+
     if ml_target:
         ml_utility_info = ml_utility_metrics(
             df,
@@ -217,6 +232,10 @@ def main(argv: Sequence[str] | None = None) -> None:
             "ml_utility_available": False,
             "ml_utility_reason": "No target configured at evaluation.ml_utility.target.",
         }
+
+    distribution_values = [
+        value for value in dist_scores.values() if value is not None
+    ]
 
     metrics = {
         "rows_real": int(len(df)),
@@ -235,9 +254,7 @@ def main(argv: Sequence[str] | None = None) -> None:
         },
         "pairplot_enabled": pairplot_enabled,
         "distribution_overlap_mean": (
-            float(np.mean([v for v in dist_scores.values() if v is not None]))
-            if dist_scores
-            else None
+            float(np.mean(distribution_values)) if distribution_values else None
         ),
         "distribution_overlap_per_feature": dist_scores,
         "pca_explained_variance": (pca_info or {}).get("explained_variance"),
@@ -248,6 +265,7 @@ def main(argv: Sequence[str] | None = None) -> None:
         **privacy_info,
         **ml_utility_info,
     }
+
     save_json(run_dir / "metrics.json", metrics)
 
     summary_keys = [
@@ -264,10 +282,12 @@ def main(argv: Sequence[str] | None = None) -> None:
         "ml_utility_available",
         "utility_ratio",
     ]
+
     summary = {key: metrics.get(key) for key in summary_keys if key in metrics}
     pd.DataFrame([summary]).to_csv(run_dir / "quality_summary.csv", index=False)
 
     report_path = reports_dir / f"{run_name}_report.html"
+
     write_report(
         method=args.method,
         rows=n_rows,
