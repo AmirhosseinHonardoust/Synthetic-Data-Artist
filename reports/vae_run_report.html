@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>Synthetic Data Artist - Report</title>
+<style>body{font-family:Arial;margin:24px} pre{background:#f6f8fa;padding:12px}</style></head>
+<body>
+<h1>Synthetic Data Artist</h1>
+<p>Method: <b>vae</b> · Rows: 1000 · Seed: 42</p>
+<h2>Metrics</h2><pre>{
+  "rows_real": 500,
+  "rows_synthetic": 1000,
+  "method": "vae",
+  "seed": 42,
+  "schema": {
+    "numeric_columns": [
+      "age",
+      "income",
+      "score"
+    ],
+    "categorical_columns": [
+      "visits",
+      "segment"
+    ]
+  },
+  "paths": {
+    "synthetic_data": "data\\synthetic_data_vae_run.csv",
+    "run_dir": "outputs\\vae_run",
+    "plots_dir": "outputs\\vae_run\\plots",
+    "report": "reports\\vae_run_report.html"
+  },
+  "pairplot_enabled": true,
+  "distribution_overlap_mean": 0.5956136050241242,
+  "distribution_overlap_per_feature": {
+    "age": 0.5671409188971237,
+    "income": 0.5919619769054949,
+    "score": 0.6277379192697539
+  },
+  "pca_explained_variance": [
+    0.999984422950629,
+    1.5253937879024893e-05
+  ],
+  "correlation_diff_mean": 0.15149483431150804,
+  "categorical_similarity_mean": 0.5905,
+  "categorical_similarity_per_feature": {
+    "visits": 0.472,
+    "segment": 0.709
+  },
+  "numeric_summary_diff_mean": 1.2047618819547847,
+  "numeric_summary_diff_per_feature": {
+    "age": {
+      "mean_abs_diff_scaled": 0.4953383901111718,
+      "std_abs_diff_scaled": 0.6188195949821436,
+      "min_abs_diff_scaled": 1.975402638102617,
+      "max_abs_diff_scaled": 1.2196040456325856
+    },
+    "income": {
+      "mean_abs_diff_scaled": 0.17453552215576287,
+      "std_abs_diff_scaled": 0.6227348777263715,
+      "min_abs_diff_scaled": 0.7546427811531653,
+      "max_abs_diff_scaled": 4.759673471790315
+    },
+    "score": {
+      "mean_abs_diff_scaled": 0.07892685954564312,
+      "std_abs_diff_scaled": 0.586810728120934,
+      "min_abs_diff_scaled": 1.7085305199893925,
+      "max_abs_diff_scaled": 1.462123154147315
+    }
+  },
+  "boundary_violation_rate_mean": 0.0,
+  "numeric_boundary_violation_rate": {
+    "age": 0.0,
+    "income": 0.0,
+    "score": 0.0
+  },
+  "categorical_invalid_rate": {
+    "visits": 0.0,
+    "segment": 0.0
+  },
+  "privacy_note": "Nearest-neighbor metrics are proxy diagnostics, not a formal privacy guarantee.",
+  "exact_duplicate_rate": 0.0,
+  "nearest_neighbor_distance_mean": 0.500723889010421,
+  "nearest_neighbor_distance_p05": 0.16245466170724251,
+  "nearest_neighbor_distance_min": 0.04378175545198473,
+  "ml_utility_available": false,
+  "ml_utility_reason": "No target configured at evaluation.ml_utility.target."
+}</pre>
+<h2>Distribution Overlap</h2><img src="../outputs/vae_run/plots/distribution_overlap.png">
+<h2>PCA Projection</h2><img src="../outputs/vae_run/plots/pca_projection.png">
+<h2>Correlation</h2><img src="../outputs/vae_run/plots/correlation_heatmap.png">
+<h2>Pairplot</h2><img src="../outputs/vae_run/plots/pairplot_comparison.png">
+</body></html>
