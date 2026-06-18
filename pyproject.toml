@@ -1,0 +1,39 @@
+# Tooling configuration for Synthetic-Data-Artist.
+#
+# This file does not declare a build system or package metadata; the project is
+# run as scripts/CLI (see README), not installed as a wheel. It exists purely to
+# give Ruff, Black, and mypy a single shared source of truth so that local runs
+# and CI agree on line length and rule selection.
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+# E/F: pyflakes + pycodestyle, I: import sorting, B: bugbear,
+# SIM: simplifications, UP: pyupgrade modern-syntax suggestions.
+select = ["E", "F", "I", "B", "SIM", "UP"]
+
+[tool.ruff.lint.per-file-ignores]
+# Test modules prepend the project's "src" directory to sys.path before importing
+# the packages under test, which is a deliberate and standard pattern. E402
+# (module-level import not at top of file) is expected there, so it is ignored.
+"tests/*" = ["E402"]
+
+[tool.black]
+line-length = 100
+target-version = ["py310", "py311", "py312"]
+
+[tool.mypy]
+python_version = "3.10"
+# Third-party scientific libraries (numpy, pandas, sklearn, torch, seaborn, yaml)
+# ship without complete type stubs; silence missing-stub noise rather than vendor
+# stubs we do not control.
+ignore_missing_imports = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+# src/main.py intentionally uses a try/except dual-import block so it runs both as
+# a module (python -m src.main) and as a script (python src/main.py). That idiom
+# defeats static import resolution and trips no-redef/attr-defined. It is excluded
+# here and can be revisited if the import strategy is unified in a later change.
+exclude = '^src/main\.py$'
