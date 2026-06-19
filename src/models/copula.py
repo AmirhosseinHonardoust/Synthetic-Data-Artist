@@ -29,10 +29,15 @@ def fit_copula(df_num: pd.DataFrame) -> dict[str, np.ndarray]:
     return {"chol": chol, "samples": X}
 
 
-def sample_copula(model: dict[str, np.ndarray], n: int) -> np.ndarray:
-    """Sample numeric rows from a fitted Gaussian copula."""
+def sample_copula(model: dict[str, np.ndarray], n: int, rng: np.random.Generator) -> np.ndarray:
+    """Sample numeric rows from a fitted Gaussian copula.
+
+    Uses the supplied ``rng`` for the latent normal draws so that the numeric
+    output is fully determined by the caller's seed, with no dependence on the
+    global NumPy random state.
+    """
     p = model["chol"].shape[0]
-    z = np.random.randn(n, p) @ model["chol"].T
+    z = rng.standard_normal((n, p)) @ model["chol"].T
     u = norm.cdf(z)
     samples = model["samples"]
     cols = [_empirical_ppf(u[:, j], samples[:, j]) for j in range(p)]
@@ -52,7 +57,7 @@ def generate_copula(
 
     if numeric_cols:
         model = fit_copula(df[numeric_cols])
-        out[numeric_cols] = sample_copula(model, n_rows)
+        out[numeric_cols] = sample_copula(model, n_rows, rng)
 
     for col in categorical_cols:
         probs = df[col].value_counts(normalize=True)
