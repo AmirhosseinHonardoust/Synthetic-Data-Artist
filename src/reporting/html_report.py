@@ -4,7 +4,9 @@ import json
 from pathlib import Path
 
 
-def write_report(method: str, rows: int, seed: int, metrics: dict, report_path: Path, run_name: str) -> None:
+def write_report(
+    method: str, rows: int, seed: int, metrics: dict, report_path: Path, run_name: str
+) -> None:
     """Write a simple standalone HTML report for a synthetic-data run."""
     base = f"../outputs/{run_name}/plots"
     html = f"""<!DOCTYPE html>

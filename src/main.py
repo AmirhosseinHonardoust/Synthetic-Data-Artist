@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import argparse
 import os
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Sequence
 
 import numpy as np
 import pandas as pd
@@ -188,10 +188,7 @@ def main(argv: Sequence[str] | None = None) -> None:
         numeric_cols=numeric_cols,
     )
 
-    pairplot_enabled = (
-        bool(get_nested(cfg, "plots.pairplot", True))
-        and not args.skip_pairplot
-    )
+    pairplot_enabled = bool(get_nested(cfg, "plots.pairplot", True)) and not args.skip_pairplot
 
     if pairplot_enabled:
         pairplot_compare(
@@ -233,9 +230,7 @@ def main(argv: Sequence[str] | None = None) -> None:
             "ml_utility_reason": "No target configured at evaluation.ml_utility.target.",
         }
 
-    distribution_values = [
-        value for value in dist_scores.values() if value is not None
-    ]
+    distribution_values = [value for value in dist_scores.values() if value is not None]
 
     metrics = {
         "rows_real": int(len(df)),

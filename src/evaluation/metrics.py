@@ -199,9 +199,7 @@ def boundary_violation_rates(
         allowed = set(df_real[col].astype(str).dropna().unique())
         synthetic = df_syn[col].astype(str).dropna()
 
-        categorical_rates[col] = (
-            float((~synthetic.isin(allowed)).mean()) if len(synthetic) else 0.0
-        )
+        categorical_rates[col] = float((~synthetic.isin(allowed)).mean()) if len(synthetic) else 0.0
 
     all_rates = list(numeric_rates.values()) + list(categorical_rates.values())
 
@@ -239,22 +237,32 @@ def privacy_nearest_neighbor_metrics(
 
     if not cols or len(df_real) == 0 or len(df_syn) == 0:
         return {
-            "privacy_note": "No comparable columns available for nearest-neighbor privacy proxy metrics.",
+            "privacy_note": (
+                "No comparable columns available for nearest-neighbor privacy proxy " "metrics."
+            ),
             "exact_duplicate_rate": None,
             "nearest_neighbor_distance_mean": None,
             "nearest_neighbor_distance_p05": None,
             "nearest_neighbor_distance_min": None,
         }
 
-    real_sample = df_real[cols].sample(
-        n=min(max_rows, len(df_real)),
-        random_state=seed,
-    ).copy()
+    real_sample = (
+        df_real[cols]
+        .sample(
+            n=min(max_rows, len(df_real)),
+            random_state=seed,
+        )
+        .copy()
+    )
 
-    syn_sample = df_syn[cols].sample(
-        n=min(max_rows, len(df_syn)),
-        random_state=seed,
-    ).copy()
+    syn_sample = (
+        df_syn[cols]
+        .sample(
+            n=min(max_rows, len(df_syn)),
+            random_state=seed,
+        )
+        .copy()
+    )
 
     real_rows = set(real_sample.astype(str).agg("||".join, axis=1))
     syn_rows = syn_sample.astype(str).agg("||".join, axis=1)
@@ -303,7 +311,9 @@ def privacy_nearest_neighbor_metrics(
     nearest = distances.min(axis=1)
 
     return {
-        "privacy_note": "Nearest-neighbor metrics are proxy diagnostics, not a formal privacy guarantee.",
+        "privacy_note": (
+            "Nearest-neighbor metrics are proxy diagnostics, not a formal privacy " "guarantee."
+        ),
         "exact_duplicate_rate": exact_duplicate_rate,
         "nearest_neighbor_distance_mean": float(np.mean(nearest)),
         "nearest_neighbor_distance_p05": float(np.quantile(nearest, 0.05)),
@@ -402,13 +412,17 @@ def ml_utility_metrics(
         if y_real.nunique(dropna=True) < 2:
             return {
                 "ml_utility_available": False,
-                "ml_utility_reason": "Classification target has fewer than two classes in real data.",
+                "ml_utility_reason": (
+                    "Classification target has fewer than two classes in real data."
+                ),
             }
 
         if y_syn.nunique(dropna=True) < 2:
             return {
                 "ml_utility_available": False,
-                "ml_utility_reason": "Classification target has fewer than two classes in synthetic data.",
+                "ml_utility_reason": (
+                    "Classification target has fewer than two classes in synthetic data."
+                ),
             }
 
         class_counts = y_real.value_counts(dropna=True)
@@ -547,9 +561,7 @@ def ml_utility_metrics(
                     real_proba = real_pipeline.predict_proba(X_test_real)[:, 1]
                     synthetic_proba = synthetic_pipeline.predict_proba(X_test_real)[:, 1]
 
-                    results["real_model_roc_auc"] = float(
-                        roc_auc_score(y_test_real, real_proba)
-                    )
+                    results["real_model_roc_auc"] = float(roc_auc_score(y_test_real, real_proba))
                     results["synthetic_model_roc_auc"] = float(
                         roc_auc_score(y_test_real, synthetic_proba)
                     )
@@ -573,9 +585,7 @@ def ml_utility_metrics(
                     "real_model_mae": float(real_mae),
                     "synthetic_model_mae": float(synthetic_mae),
                     "utility_ratio": (
-                        float(synthetic_r2 / real_r2)
-                        if not np.isclose(real_r2, 0.0)
-                        else None
+                        float(synthetic_r2 / real_r2) if not np.isclose(real_r2, 0.0) else None
                     ),
                 }
             )

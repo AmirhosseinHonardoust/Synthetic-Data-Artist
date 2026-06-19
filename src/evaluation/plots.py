@@ -15,7 +15,9 @@ def _numeric_columns(df_real: pd.DataFrame, numeric_cols: list[str] | None = Non
     return numeric_cols or [c for c in df_real.columns if pd.api.types.is_numeric_dtype(df_real[c])]
 
 
-def plot_distribution_overlap(df_real, df_syn, bins, out_path: Path, numeric_cols: list[str] | None = None):
+def plot_distribution_overlap(
+    df_real, df_syn, bins, out_path: Path, numeric_cols: list[str] | None = None
+):
     num_cols = _numeric_columns(df_real, numeric_cols)
     if not num_cols:
         return {}
@@ -26,7 +28,7 @@ def plot_distribution_overlap(df_real, df_syn, bins, out_path: Path, numeric_col
         axes = [axes]
 
     scores = distribution_overlap_scores(df_real[cols], df_syn[cols], bins=bins, numeric_cols=cols)
-    for ax, col in zip(axes, cols):
+    for ax, col in zip(axes, cols, strict=True):
         ax.hist(df_real[col].dropna(), bins=bins, alpha=0.5, label="real", density=True)
         ax.hist(df_syn[col].dropna(), bins=bins, alpha=0.5, label="synthetic", density=True)
         ax.set_title(f"Distribution overlap: {col}")
@@ -39,7 +41,9 @@ def plot_distribution_overlap(df_real, df_syn, bins, out_path: Path, numeric_col
     return scores
 
 
-def plot_pca(df_real, df_syn, out_path: Path, n_components=2, numeric_cols: list[str] | None = None):
+def plot_pca(
+    df_real, df_syn, out_path: Path, n_components=2, numeric_cols: list[str] | None = None
+):
     warnings.filterwarnings("ignore", message=".*feature names.*PCA.*")
     num_cols = _numeric_columns(df_real, numeric_cols)
     if not num_cols:
@@ -68,7 +72,9 @@ def plot_pca(df_real, df_syn, out_path: Path, n_components=2, numeric_cols: list
     return {"explained_variance": pca.explained_variance_ratio_.tolist()}
 
 
-def plot_correlation_heatmap(df_real, df_syn, out_path: Path, numeric_cols: list[str] | None = None):
+def plot_correlation_heatmap(
+    df_real, df_syn, out_path: Path, numeric_cols: list[str] | None = None
+):
     num_cols = _numeric_columns(df_real, numeric_cols)
     if len(num_cols) < 2:
         return {}
@@ -89,7 +95,9 @@ def plot_correlation_heatmap(df_real, df_syn, out_path: Path, numeric_cols: list
     return {"correlation_diff_mean": diff}
 
 
-def pairplot_compare(df_real, df_syn, out_path: Path, sample=500, numeric_cols: list[str] | None = None):
+def pairplot_compare(
+    df_real, df_syn, out_path: Path, sample=500, numeric_cols: list[str] | None = None
+):
     num_cols = _numeric_columns(df_real, numeric_cols)
     if len(num_cols) < 2:
         return False

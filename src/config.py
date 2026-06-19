@@ -28,7 +28,7 @@ def load_config(path: str | Path) -> dict[str, Any]:
     """Load a YAML config file and return an empty dict when the file is empty."""
     import yaml
 
-    with open(path, "r", encoding="utf-8") as f:
+    with open(path, encoding="utf-8") as f:
         data = yaml.safe_load(f)
     return data or {}
 
@@ -125,7 +125,9 @@ def validate_config(config: dict[str, Any]) -> None:
         else:
             test_size = ml_utility.get("test_size")
             if test_size is not None and not (
-                isinstance(test_size, (int, float)) and not isinstance(test_size, bool) and 0 < float(test_size) < 1
+                isinstance(test_size, (int, float))
+                and not isinstance(test_size, bool)
+                and 0 < float(test_size) < 1
             ):
                 errors.append("evaluation.ml_utility.test_size must be between 0 and 1")
 

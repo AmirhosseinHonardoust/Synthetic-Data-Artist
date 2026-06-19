@@ -102,7 +102,7 @@ def train_and_generate_vae(
     if X_cat.shape[1] > 0:
         cats = enc.categories_
         start = 0
-        for col, cat_vals in zip(categorical_cols, cats):
+        for col, cat_vals in zip(categorical_cols, cats, strict=True):
             k = len(cat_vals)
             block = X_syn[:, idx + start : idx + start + k]
             labels = np.array(cat_vals)[np.argmax(block, axis=1)]
