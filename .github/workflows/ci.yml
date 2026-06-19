@@ -58,7 +58,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          pip install -r requirements.txt -r requirements-vae.txt
 
       - name: Check source files compile
         run: |
@@ -125,7 +125,7 @@ jobs:
 
       - name: Validate config and input data only
         run: |
-          python src/main.py \
+          python -m src.main \
             --config ci_config.yaml \
             --data data/ci_real_data.csv \
             --method copula \
@@ -133,7 +133,7 @@ jobs:
 
       - name: Run Copula smoke workflow
         run: |
-          python src/main.py \
+          python -m src.main \
             --config ci_config.yaml \
             --data data/ci_real_data.csv \
             --method copula \
@@ -142,7 +142,7 @@ jobs:
 
       - name: Run VAE smoke workflow
         run: |
-          python src/main.py \
+          python -m src.main \
             --config ci_config.yaml \
             --data data/ci_real_data.csv \
             --method vae \
