@@ -59,7 +59,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -e .[vae]
-          pip install coverage
+          pip install "coverage[toml]"
 
       - name: Check source files compile
         run: |
