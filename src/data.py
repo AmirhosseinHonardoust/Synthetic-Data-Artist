@@ -32,9 +32,7 @@ def validate_dataframe(df: pd.DataFrame, *, required_min_rows: int = 2) -> None:
         errors.append("dataframe must contain at least one column")
 
     if df.columns.duplicated().any():
-        duplicates = sorted(
-            {str(col) for col in df.columns[df.columns.duplicated(keep=False)]}
-        )
+        duplicates = sorted({str(col) for col in df.columns[df.columns.duplicated(keep=False)]})
         errors.append(f"duplicate column names found: {duplicates}")
 
     blank_columns = [str(col) for col in df.columns if str(col).strip() == ""]
@@ -93,9 +91,7 @@ def load_or_generate(
     validate_dataframe(df)
 
     output_path = (
-        Path(generated_output_path)
-        if generated_output_path
-        else Path("data/real_data.csv")
+        Path(generated_output_path) if generated_output_path else Path("data/real_data.csv")
     )
 
     output_path.parent.mkdir(exist_ok=True, parents=True)

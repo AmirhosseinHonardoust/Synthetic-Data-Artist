@@ -5,7 +5,6 @@ import py_compile
 import unittest
 from pathlib import Path
 
-
 ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -16,11 +15,17 @@ class ProjectIntegrityTests(unittest.TestCase):
 
     def test_requirements_are_one_dependency_per_line(self) -> None:
         requirements = (ROOT / "requirements.txt").read_text(encoding="utf-8").splitlines()
-        package_lines = [line.strip() for line in requirements if line.strip() and not line.strip().startswith("#")]
+        package_lines = [
+            line.strip()
+            for line in requirements
+            if line.strip() and not line.strip().startswith("#")
+        ]
 
         self.assertGreaterEqual(len(package_lines), 5)
         for line in package_lines:
-            self.assertNotIn(" ", line, msg=f"Requirement should be one dependency per line: {line!r}")
+            self.assertNotIn(
+                " ", line, msg=f"Requirement should be one dependency per line: {line!r}"
+            )
 
     def test_existing_metrics_json_files_are_valid(self) -> None:
         metrics_files = list((ROOT / "outputs").glob("*/metrics.json"))
