@@ -1,9 +1,11 @@
-numpy
-pandas
-scikit-learn
-scipy
-matplotlib
-seaborn
-PyYAML
-jinja2
-torch
+# Runtime dependencies. Versions are bounded with a lower floor (Python
+# 3.10-3.12 support) and an upper cap at the next major release to keep builds
+# reproducible and guard against breaking major upgrades.
+numpy>=1.26,<3
+pandas>=2.0,<4
+scikit-learn>=1.3,<2
+scipy>=1.10,<2
+matplotlib>=3.7,<4
+seaborn>=0.13,<0.14
+PyYAML>=6.0,<7
+torch>=2.0,<3
