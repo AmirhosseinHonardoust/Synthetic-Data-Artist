@@ -172,7 +172,7 @@ These charts are diagnostic tools. They help identify obvious quality problems, 
 | Copula | VAE |
 |---|---|
 | ![Copula distribution overlap](outputs/copula_run/plots/distribution_overlap.png) | ![VAE distribution overlap](outputs/vae_run/plots/distribution_overlap.png) |
-| **Analysis:** The Copula generator preserves the real numeric distributions much better on this demo dataset. It keeps the feature shapes closer to the original data and achieves a mean distribution-overlap score of approximately **0.941**. | **Analysis:** The lightweight VAE baseline produces more compressed distributions and loses more tail behavior. Its mean distribution-overlap score is approximately **0.596**, which indicates weaker distribution preservation. |
+| **Analysis:** The Copula generator preserves the real numeric distributions much better on this demo dataset. It keeps the feature shapes closer to the original data and achieves a mean distribution-overlap score of approximately **0.943**. | **Analysis:** The lightweight VAE baseline produces more compressed distributions and loses more tail behavior. Its mean distribution-overlap score is approximately **0.596**, which indicates weaker distribution preservation. |
 </div>
 
 ### PCA Projection Comparison
@@ -191,7 +191,7 @@ These charts are diagnostic tools. They help identify obvious quality problems, 
 
 | Method | Distribution overlap ↑ | Correlation diff ↓ | Categorical similarity ↑ | Exact duplicate rate ↓ |
 |---|---|---|---|---|
-| Copula | 0.941 | 0.015 | 0.972 | 0.000 |
+| Copula | 0.943 | 0.026 | 0.957 | 0.000 |
 | VAE | 0.596 | 0.151 | 0.591 | 0.000 |
 </div>
 
@@ -289,6 +289,7 @@ Synthetic-Data-Artist/
 │
 ├── config.yaml
 ├── requirements.txt
+├── requirements-vae.txt
 ├── README.md
 └── LICENSE
 ```
@@ -326,6 +327,14 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
+The Copula generator and all evaluation run on the core requirements above. The
+VAE generator (`--method vae`) additionally needs PyTorch, kept separate so the
+default install stays light:
+
+```bash
+pip install -r requirements.txt -r requirements-vae.txt
+```
+
 ---
 
 ## Running the Generator
@@ -333,25 +342,25 @@ pip install -r requirements.txt
 Run the Copula workflow:
 
 ```bash
-python src/main.py --method copula --run_name copula_run
+python -m src.main --method copula --run_name copula_run
 ```
 
 Run the VAE workflow:
 
 ```bash
-python src/main.py --method vae --run_name vae_run
+python -m src.main --method vae --run_name vae_run
 ```
 
 Validate configuration and input data without generating synthetic data:
 
 ```bash
-python src/main.py --validate-only
+python -m src.main --validate-only
 ```
 
 Run a faster workflow without the pairplot:
 
 ```bash
-python src/main.py --method copula --run_name fast_copula --skip-pairplot
+python -m src.main --method copula --run_name fast_copula --skip-pairplot
 ```
 
 ---
@@ -361,7 +370,7 @@ python src/main.py --method copula --run_name fast_copula --skip-pairplot
 Basic CLI example:
 
 ```bash
-python src/main.py \
+python -m src.main \
   --config config.yaml \
   --data data/real_data.csv \
   --method copula \
@@ -389,7 +398,7 @@ Available options:
 Example with custom directories:
 
 ```bash
-python src/main.py \
+python -m src.main \
   --method vae \
   --run_name experiment_vae \
   --rows 500 \

@@ -8,4 +8,3 @@ scipy>=1.10,<2
 matplotlib>=3.7,<4
 seaborn>=0.13,<0.14
 PyYAML>=6.0,<7
-torch>=2.0,<3

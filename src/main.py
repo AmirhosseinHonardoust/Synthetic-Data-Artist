@@ -8,46 +8,25 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-try:  # package imports, e.g. `python -m src.main`
-    from .config import get_nested, load_config, save_json, set_seed, validate_config
-    from .data import load_or_generate, validate_dataframe
-    from .evaluation.metrics import (
-        boundary_violation_rates,
-        categorical_distribution_similarity,
-        ml_utility_metrics,
-        numeric_summary_differences,
-        privacy_nearest_neighbor_metrics,
-    )
-    from .evaluation.plots import (
-        pairplot_compare,
-        plot_correlation_heatmap,
-        plot_distribution_overlap,
-        plot_pca,
-    )
-    from .models.copula import generate_copula
-    from .models.vae import train_and_generate_vae
-    from .reporting.html_report import write_report
-    from .schema import detect_schema
-except ImportError:  # script imports, e.g. `python src/main.py`
-    from config import get_nested, load_config, save_json, set_seed, validate_config
-    from data import load_or_generate, validate_dataframe
-    from evaluation.metrics import (
-        boundary_violation_rates,
-        categorical_distribution_similarity,
-        ml_utility_metrics,
-        numeric_summary_differences,
-        privacy_nearest_neighbor_metrics,
-    )
-    from evaluation.plots import (
-        pairplot_compare,
-        plot_correlation_heatmap,
-        plot_distribution_overlap,
-        plot_pca,
-    )
-    from models.copula import generate_copula
-    from models.vae import train_and_generate_vae
-    from reporting.html_report import write_report
-    from schema import detect_schema
+from .config import get_nested, load_config, save_json, set_seed, validate_config
+from .data import load_or_generate, validate_dataframe
+from .evaluation.metrics import (
+    boundary_violation_rates,
+    categorical_distribution_similarity,
+    ml_utility_metrics,
+    numeric_summary_differences,
+    privacy_nearest_neighbor_metrics,
+)
+from .evaluation.plots import (
+    pairplot_compare,
+    plot_correlation_heatmap,
+    plot_distribution_overlap,
+    plot_pca,
+)
+from .models.copula import generate_copula
+from .models.vae import train_and_generate_vae
+from .reporting.html_report import write_report
+from .schema import detect_schema
 
 
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:

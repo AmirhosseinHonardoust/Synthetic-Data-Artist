@@ -32,8 +32,3 @@ python_version = "3.10"
 ignore_missing_imports = true
 warn_redundant_casts = true
 warn_unused_ignores = true
-# src/main.py intentionally uses a try/except dual-import block so it runs both as
-# a module (python -m src.main) and as a script (python src/main.py). That idiom
-# defeats static import resolution and trips no-redef/attr-defined. It is excluded
-# here and can be revisited if the import strategy is unified in a later change.
-exclude = '^src/main\.py$'
