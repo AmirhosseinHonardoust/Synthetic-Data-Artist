@@ -1,18 +1,14 @@
 from __future__ import annotations
 
-import sys
 import tempfile
 import unittest
 from pathlib import Path
 
 import pandas as pd
 
-ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT))
-
-from src.config import ConfigValidationError, validate_config
-from src.data import DataValidationError, load_or_generate, validate_dataframe
-from src.main import parse_args
+from synthetic_data_artist.config import ConfigValidationError, validate_config
+from synthetic_data_artist.data import DataValidationError, load_or_generate, validate_dataframe
+from synthetic_data_artist.main import parse_args
 
 
 class ConfigValidationTests(unittest.TestCase):

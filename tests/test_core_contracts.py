@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -12,18 +11,15 @@ matplotlib.use("Agg")
 import numpy as np
 import pandas as pd
 
-ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT))
-
-from src.evaluation.plots import (
+from synthetic_data_artist.evaluation.plots import (
     plot_correlation_heatmap,
     plot_distribution_overlap,
     plot_pca,
 )
-from src.models.copula import generate_copula
-from src.models.vae import train_and_generate_vae
-from src.reporting.html_report import write_report
-from src.schema import detect_schema
+from synthetic_data_artist.models.copula import generate_copula
+from synthetic_data_artist.models.vae import train_and_generate_vae
+from synthetic_data_artist.reporting.html_report import write_report
+from synthetic_data_artist.schema import detect_schema
 
 
 class CoreContractsTests(unittest.TestCase):

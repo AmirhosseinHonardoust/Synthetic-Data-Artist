@@ -1,9 +1,33 @@
-# Tooling configuration for Synthetic-Data-Artist.
-#
-# This file does not declare a build system or package metadata; the project is
-# run as scripts/CLI (see README), not installed as a wheel. It exists purely to
-# give Ruff, Black, and mypy a single shared source of truth so that local runs
-# and CI agree on line length and rule selection.
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "synthetic-data-artist"
+version = "0.1.0"
+description = "Generate and evaluate synthetic tabular data with Copula and VAE methods."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { file = "LICENSE" }
+dependencies = [
+    "numpy>=1.26,<3",
+    "pandas>=2.0,<4",
+    "scikit-learn>=1.3,<2",
+    "scipy>=1.10,<2",
+    "matplotlib>=3.7,<4",
+    "seaborn>=0.13,<0.14",
+    "PyYAML>=6.0,<7",
+]
+
+[project.optional-dependencies]
+# Neural VAE generator (python -m synthetic_data_artist.main --method vae).
+vae = ["torch>=2.0,<3"]
+
+[project.scripts]
+synthetic-data-artist = "synthetic_data_artist.main:main"
+
+[tool.setuptools.packages.find]
+include = ["synthetic_data_artist*"]
 
 [tool.ruff]
 line-length = 100
@@ -13,12 +37,6 @@ target-version = "py310"
 # E/F: pyflakes + pycodestyle, I: import sorting, B: bugbear,
 # SIM: simplifications, UP: pyupgrade modern-syntax suggestions.
 select = ["E", "F", "I", "B", "SIM", "UP"]
-
-[tool.ruff.lint.per-file-ignores]
-# Test modules prepend the project's "src" directory to sys.path before importing
-# the packages under test, which is a deliberate and standard pattern. E402
-# (module-level import not at top of file) is expected there, so it is ignored.
-"tests/*" = ["E402"]
 
 [tool.black]
 line-length = 100
@@ -32,3 +50,23 @@ python_version = "3.10"
 ignore_missing_imports = true
 warn_redundant_casts = true
 warn_unused_ignores = true
+warn_unused_configs = true
+# First-party code must be fully annotated.
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+
+[[tool.mypy.overrides]]
+# The VAE module is a thin wrapper over PyTorch, whose runtime objects are
+# dynamically typed; requiring annotations on its internal nn.Module helpers
+# would add Any-noise without real safety. Strict typing still applies elsewhere.
+module = "synthetic_data_artist.models.vae"
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
+
+[tool.coverage.run]
+branch = true
+source = ["synthetic_data_artist"]
+
+[tool.coverage.report]
+show_missing = true
