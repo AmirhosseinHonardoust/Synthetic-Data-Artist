@@ -482,18 +482,23 @@ def ml_utility_metrics(
         return ColumnTransformer(transformers=transformers, remainder="drop")
 
     if is_classification:
-        estimator_factory = lambda: RandomForestClassifier(
-            n_estimators=80,
-            random_state=seed,
-            min_samples_leaf=2,
-            class_weight="balanced",
-        )
+
+        def estimator_factory() -> Any:
+            return RandomForestClassifier(
+                n_estimators=80,
+                random_state=seed,
+                min_samples_leaf=2,
+                class_weight="balanced",
+            )
+
     else:
-        estimator_factory = lambda: RandomForestRegressor(
-            n_estimators=80,
-            random_state=seed,
-            min_samples_leaf=2,
-        )
+
+        def estimator_factory() -> Any:
+            return RandomForestRegressor(
+                n_estimators=80,
+                random_state=seed,
+                min_samples_leaf=2,
+            )
 
     def make_pipeline() -> Pipeline:
         return Pipeline(
