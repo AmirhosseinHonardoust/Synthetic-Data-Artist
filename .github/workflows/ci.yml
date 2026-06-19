@@ -25,19 +25,14 @@ jobs:
           python -m pip install --upgrade pip
           pip install ruff black mypy
 
-      # Ruff and Black are not yet enforcing: the tree still has style findings
-      # that are cleaned up in follow-up changes. These steps run and surface
-      # annotations without failing the build (continue-on-error) until the tree
-      # is clean, at which point continue-on-error will be removed.
+      # The tree is clean, so Ruff, Black, and mypy are all enforced and will
+      # fail the build on any new finding.
       - name: Ruff (lint)
-        continue-on-error: true
         run: ruff check src tests
 
       - name: Black (format check)
-        continue-on-error: true
         run: black --check src tests
 
-      # mypy already passes on the current tree and is enforced from the start.
       - name: mypy (type check)
         run: mypy src
 
