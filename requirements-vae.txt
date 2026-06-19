@@ -1,0 +1,4 @@
+# Optional dependencies for the VAE generator (python -m src.main --method vae).
+# Install alongside requirements.txt only if you need the neural baseline:
+#   pip install -r requirements.txt -r requirements-vae.txt
+torch>=2.0,<3
