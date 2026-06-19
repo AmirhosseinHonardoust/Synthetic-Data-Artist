@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Any
+
 import numpy as np
 import pandas as pd
 
@@ -9,7 +11,7 @@ def _as_clean_numeric(values: pd.Series | np.ndarray) -> np.ndarray:
     return arr[np.isfinite(arr)]
 
 
-def _make_one_hot_encoder():
+def _make_one_hot_encoder() -> Any:
     """Create a OneHotEncoder compatible with newer and older sklearn versions."""
     from sklearn.preprocessing import OneHotEncoder
 

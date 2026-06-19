@@ -1,16 +1,11 @@
 from __future__ import annotations
 
-import sys
 import unittest
-from pathlib import Path
 
 import numpy as np
 import pandas as pd
 
-ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT))
-
-from src.evaluation.metrics import (
+from synthetic_data_artist.evaluation.metrics import (
     boundary_violation_rates,
     categorical_distribution_similarity,
     distribution_overlap_scores,

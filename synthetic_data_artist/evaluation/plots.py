@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import warnings
 from pathlib import Path
+from typing import Any
 
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -16,8 +17,12 @@ def _numeric_columns(df_real: pd.DataFrame, numeric_cols: list[str] | None = Non
 
 
 def plot_distribution_overlap(
-    df_real, df_syn, bins, out_path: Path, numeric_cols: list[str] | None = None
-):
+    df_real: pd.DataFrame,
+    df_syn: pd.DataFrame,
+    bins: int,
+    out_path: Path,
+    numeric_cols: list[str] | None = None,
+) -> dict[str, float | None]:
     num_cols = _numeric_columns(df_real, numeric_cols)
     if not num_cols:
         return {}
@@ -42,8 +47,12 @@ def plot_distribution_overlap(
 
 
 def plot_pca(
-    df_real, df_syn, out_path: Path, n_components=2, numeric_cols: list[str] | None = None
-):
+    df_real: pd.DataFrame,
+    df_syn: pd.DataFrame,
+    out_path: Path,
+    n_components: int = 2,
+    numeric_cols: list[str] | None = None,
+) -> dict[str, Any] | None:
     warnings.filterwarnings("ignore", message=".*feature names.*PCA.*")
     num_cols = _numeric_columns(df_real, numeric_cols)
     if not num_cols:
@@ -73,8 +82,11 @@ def plot_pca(
 
 
 def plot_correlation_heatmap(
-    df_real, df_syn, out_path: Path, numeric_cols: list[str] | None = None
-):
+    df_real: pd.DataFrame,
+    df_syn: pd.DataFrame,
+    out_path: Path,
+    numeric_cols: list[str] | None = None,
+) -> dict[str, float | None]:
     num_cols = _numeric_columns(df_real, numeric_cols)
     if len(num_cols) < 2:
         return {}
@@ -96,8 +108,12 @@ def plot_correlation_heatmap(
 
 
 def pairplot_compare(
-    df_real, df_syn, out_path: Path, sample=500, numeric_cols: list[str] | None = None
-):
+    df_real: pd.DataFrame,
+    df_syn: pd.DataFrame,
+    out_path: Path,
+    sample: int = 500,
+    numeric_cols: list[str] | None = None,
+) -> bool:
     num_cols = _numeric_columns(df_real, numeric_cols)
     if len(num_cols) < 2:
         return False

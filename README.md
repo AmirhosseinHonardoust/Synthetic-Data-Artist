@@ -267,7 +267,7 @@ Synthetic-Data-Artist/
 ├── reports/
 │   └── <run_name>_report.html
 │
-├── src/
+├── synthetic_data_artist/
 │   ├── main.py
 │   ├── config.py
 │   ├── data.py
@@ -276,7 +276,10 @@ Synthetic-Data-Artist/
 │   │   ├── copula.py
 │   │   └── vae.py
 │   ├── evaluation/
-│   │   ├── metrics.py
+│   │   ├── metrics/
+│   │   │   ├── distribution.py
+│   │   │   ├── privacy.py
+│   │   │   └── utility.py
 │   │   └── plots.py
 │   └── reporting/
 │       └── html_report.py
@@ -321,46 +324,54 @@ python -m venv .venv
 source .venv/bin/activate
 ```
 
-### 3. Install Requirements
+### 3. Install
+
+Install the project (and its dependencies) in editable mode:
 
 ```bash
-pip install -r requirements.txt
+pip install -e .
 ```
 
-The Copula generator and all evaluation run on the core requirements above. The
-VAE generator (`--method vae`) additionally needs PyTorch, kept separate so the
-default install stays light:
+This also provides a `synthetic-data-artist` command. The Copula generator and
+all evaluation run on the core dependencies. The VAE generator (`--method vae`)
+additionally needs PyTorch, kept as an optional extra so the default install
+stays light:
 
 ```bash
-pip install -r requirements.txt -r requirements-vae.txt
+pip install -e .[vae]
 ```
+
+Prefer plain requirements files? `pip install -r requirements.txt` (and
+`-r requirements-vae.txt` for the VAE extra) install the same dependency sets.
 
 ---
 
 ## Running the Generator
 
+All commands below use `python -m synthetic_data_artist.main`; after `pip install -e .` the equivalent `synthetic-data-artist` command is also available.
+
 Run the Copula workflow:
 
 ```bash
-python -m src.main --method copula --run_name copula_run
+python -m synthetic_data_artist.main --method copula --run_name copula_run
 ```
 
 Run the VAE workflow:
 
 ```bash
-python -m src.main --method vae --run_name vae_run
+python -m synthetic_data_artist.main --method vae --run_name vae_run
 ```
 
 Validate configuration and input data without generating synthetic data:
 
 ```bash
-python -m src.main --validate-only
+python -m synthetic_data_artist.main --validate-only
 ```
 
 Run a faster workflow without the pairplot:
 
 ```bash
-python -m src.main --method copula --run_name fast_copula --skip-pairplot
+python -m synthetic_data_artist.main --method copula --run_name fast_copula --skip-pairplot
 ```
 
 ---
@@ -370,7 +381,7 @@ python -m src.main --method copula --run_name fast_copula --skip-pairplot
 Basic CLI example:
 
 ```bash
-python -m src.main \
+python -m synthetic_data_artist.main \
   --config config.yaml \
   --data data/real_data.csv \
   --method copula \
@@ -398,7 +409,7 @@ Available options:
 Example with custom directories:
 
 ```bash
-python -m src.main \
+python -m synthetic_data_artist.main \
   --method vae \
   --run_name experiment_vae \
   --rows 500 \
@@ -577,7 +588,7 @@ python -m unittest discover -s tests -v
 Compile source and test files:
 
 ```bash
-python -m compileall src tests
+python -m compileall synthetic_data_artist tests
 ```
 
 The tests check important project behavior, including:

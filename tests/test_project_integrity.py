@@ -10,7 +10,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 class ProjectIntegrityTests(unittest.TestCase):
     def test_source_files_compile(self) -> None:
-        for path in (ROOT / "src").glob("*.py"):
+        for path in (ROOT / "synthetic_data_artist").glob("*.py"):
             py_compile.compile(str(path), doraise=True)
 
     def test_requirements_are_one_dependency_per_line(self) -> None:
