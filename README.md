@@ -13,7 +13,7 @@ A professional research-style Python project for generating and evaluating **syn
 ---
 
 ## Table of Contents
-
+ 
 - [Project Overview](#project-overview)
 - [What This Project Does](#what-this-project-does)
 - [What This Project Does Not Do](#what-this-project-does-not-do)
