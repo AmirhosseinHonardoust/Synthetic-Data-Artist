@@ -1,5 +1,5 @@
 <div align="center">
-      
+       
 # Synthetic Data Artist
 ![Python](https://img.shields.io/badge/Python-3.10%2B-blue) ![PyTorch](https://img.shields.io/badge/PyTorch-VAE-orange) ![scikit-learn](https://img.shields.io/badge/scikit--learn-Evaluation-green) ![Status](https://img.shields.io/badge/Status-Research%20Demo-purple) [![CI](https://github.com/AmirhosseinHonardoust/Synthetic-Data-Artist/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/AmirhosseinHonardoust/Synthetic-Data-Artist/actions/workflows/ci.yml)
 </div>
