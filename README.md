@@ -1,6 +1,8 @@
 <div align="center">
              
 # Synthetic Data Artist
+<img width="1672" height="941" alt="Synthetic-Data-Artist" src="https://github.com/user-attachments/assets/4da8071e-245a-467d-9175-54a8fda362cd" />
+
 ![Python](https://img.shields.io/badge/Python-3.10%2B-blue) ![PyTorch](https://img.shields.io/badge/PyTorch-VAE-orange) ![scikit-learn](https://img.shields.io/badge/scikit--learn-Evaluation-green) ![Status](https://img.shields.io/badge/Status-Research%20Demo-purple) [![CI](https://github.com/AmirhosseinHonardoust/Synthetic-Data-Artist/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/AmirhosseinHonardoust/Synthetic-Data-Artist/actions/workflows/ci.yml)
 </div>
 
